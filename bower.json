@@ -1,0 +1,31 @@
+{
+  "name": "ckt_expr_eval",
+  "description": "Mathematical expression evaluator",
+  "main": "dist/bundle.js",
+  "authors": [
+    "Orignal: Matthew Crumley <email@matthewcrumley.com>"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "expression",
+    "math",
+    "evaluate",
+    "eval",
+    "function",
+    "parser"
+  ],
+  "homepage": "https://github.com/cpravetz/expr-eval",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cpravetz/expr-eval.git"
+  },
+  "ignore": [
+    "*",
+    "!dist/",
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
