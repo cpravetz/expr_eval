@@ -1,6 +1,6 @@
 import { INUMBER, IOP1, IOP2, IOP3, IVAR, IFUNCOP, IVARNAME, IFUNCALL, IFUNDEF, IEXPR, IEXPREVAL, IMEMBER, IENDSTATEMENT, IARRAY } from './instruction.js';
 
-export default function evaluate(tokens, expr, values) {
+export default async function evaluate(tokens, expr, values) {
   var nstack = stackFactory();
   var n1, n2, n3;
   var op1, op2;
@@ -24,18 +24,18 @@ export default function evaluate(tokens, expr, values) {
       n2 = op2.value;
       n1 = op1.value;
       if (token === 'and') {
-        nstack.push(token, n1 ? !!evaluate(n2, expr, values) : false);
+        nstack.push(token, n1 ? !!await evaluate(n2, expr, values) : false);
       } else if (token === 'or') {
-        nstack.push(token, n1 ? true : !!evaluate(n2, expr, values));
+        nstack.push(token, n1 ? true : !!await evaluate(n2, expr, values));
       } else if (token === '=') {
         f = expr.binaryOps[token];
-        nstack.push(token, f(n1, evaluate(n2, expr, values), values));
+        nstack.push(token, f(n1, await evaluate(n2, expr, values), values));
       } else if (token === '+' && op2.token === '#' && op2.token !== op1.token) {
         // If the percentage operator is applied to the right-hand operand of an addition,
         // we need to take into account the left-hand operand, because the percentage applies to it
         f = expr.binaryOps[token];
         n1 = resolveExpression(n1, values);
-        n2 = evaluate([
+        n2 =await  evaluate([
           { type: INUMBER, value: n1 },
           { type: INUMBER, value: resolveExpression(n2, values) },
           { type: IOP2, value: '*' }
@@ -50,7 +50,7 @@ export default function evaluate(tokens, expr, values) {
       n2 = nstack.popValue();
       n1 = nstack.popValue();
       if (token === '?') {
-        nstack.push(token, evaluate(n1 ? n2 : n3, expr, values));
+        nstack.push(token, await evaluate(n1 ? n2 : n3, expr, values));
       } else {
         f = expr.ternaryOps[token];
         nstack.push(token, f(resolveExpression(n1, values), resolveExpression(n2, values), resolveExpression(n3, values)));
@@ -113,12 +113,12 @@ export default function evaluate(tokens, expr, values) {
           args.unshift(nstack.popValue());
         }
         var n1 = nstack.popValue();
-        var f = function () {
+        var f = async function () {
           var scope = Object.assign({}, values);
           for (var i = 0, len = args.length; i < len; i++) {
             scope[args[i]] = arguments[i];
           }
-          return evaluate(n2, expr, scope);
+          return await evaluate(n2, expr, scope);
         };
         // f.name = n1
         Object.defineProperty(f, 'name', {
@@ -159,8 +159,8 @@ function createExpressionEvaluator(token, expr, values) {
   if (isExpressionEvaluator(token)) return token;
   return {
     type: IEXPREVAL,
-    value: function (scope) {
-      return evaluate(token.value, expr, scope);
+    value: async function (scope) {
+      return await evaluate(token.value, expr, scope);
     }
   };
 }
