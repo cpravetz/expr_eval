@@ -146,11 +146,19 @@ export function Parser(options) {
   };
 }
 
+const removeComments = (expression) => {
+  // Regular expression to match both // and /* ... */ comments
+  const commentPattern = /\/\/.*|\/\*[\s\S]*?\*\//g;
+  return expression.replace(commentPattern, '');
+};
+
 Parser.prototype.parse = function (expr) {
   var instr = [];
+  const cleanExpr = removeComments(expr);
+
   var parserState = new ParserState(
     this,
-    new TokenStream(this, expr),
+    new TokenStream(this, cleanExpr),
     { allowMemberAccess: this.options.allowMemberAccess }
   );
 
