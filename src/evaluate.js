@@ -7,7 +7,7 @@ export default async function evaluate(tokens, expr, values) {
   var f, args, argCount;
 
   if (isExpressionEvaluator(tokens)) {
-    return resolveExpression(tokens, values);
+    return await resolveExpression(tokens, values);
   }
 
   var numTokens = tokens.length;
