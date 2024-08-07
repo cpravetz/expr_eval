@@ -35,15 +35,15 @@ export default async function evaluate(tokens, expr, values) {
         // we need to take into account the left-hand operand, because the percentage applies to it
         f = expr.binaryOps[token];
         n1 = resolveExpression(n1, values);
-        n2 =await  evaluate([
+        n2 =await evaluate([
           { type: INUMBER, value: n1 },
-          { type: INUMBER, value: resolveExpression(n2, values) },
+          { type: INUMBER, value: await resolveExpression(n2, values) },
           { type: IOP2, value: '*' }
         ], expr, values);
         nstack.push(token, f(n1, n2));
       } else {
         f = expr.binaryOps[token];
-        nstack.push(token, f(resolveExpression(n1, values), resolveExpression(n2, values)));
+        nstack.push(token, f(await resolveExpression(n1, values), await resolveExpression(n2, values)));
       }
     } else if (type === IOP3) {
       n3 = nstack.popValue();
@@ -53,7 +53,7 @@ export default async function evaluate(tokens, expr, values) {
         nstack.push(token, await evaluate(n1 ? n2 : n3, expr, values));
       } else {
         f = expr.ternaryOps[token];
-        nstack.push(token, f(resolveExpression(n1, values), resolveExpression(n2, values), resolveExpression(n3, values)));
+        nstack.push(token, f(await resolveExpression(n1, values), await resolveExpression(n2, values), await resolveExpression(n3, values)));
       }
     } else if (type === IVAR) {
       if (/^__proto__|prototype|constructor$/.test(token)) {
@@ -95,7 +95,7 @@ export default async function evaluate(tokens, expr, values) {
       argCount = token;
       args = [];
       while (argCount-- > 0) {
-        args.unshift(resolveExpression(nstack.popValue(), values));
+        args.unshift(await resolveExpression(nstack.popValue(), values));
       }
       f = nstack.popValue();
       if (f.apply && f.call) {
@@ -145,14 +145,16 @@ export default async function evaluate(tokens, expr, values) {
       }
       nstack.push(type, args);
     } else {
+      console.log('nstack:',nstack);
       throw new Error('invalid Expression');
     }
   }
   if (nstack.length > 1) {
+    console.log('nstack:',nstack);
     throw new Error('invalid Expression (parity)');
   }
   // Explicitly return zero to avoid test issues caused by -0
-  return nstack.first() === 0 ? 0 : resolveExpression(nstack.first(), values);
+  return nstack.first() === 0 ? 0 : await resolveExpression(nstack.first(), values);
 }
 
 function createExpressionEvaluator(token, expr, values) {
